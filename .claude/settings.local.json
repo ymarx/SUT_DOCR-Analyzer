@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "WebSearch",
+      "Bash(claude --version)",
+      "Bash(claude doctor)",
+      "Read(//Users/YMARX/.claude/**)",
+      "Bash(cat:*)",
+      "Bash(claude settings show)",
+      "Bash(env)",
+      "Bash(claude migrate-installer:*)",
+      "Read(//tmp/**)",
+      "Bash(bash:*)",
+      "Bash(unalias:*)",
+      "Bash(export PATH=\"$HOME/.local/bin:$PATH\")",
+      "Bash(hash -r)",
+      "Bash(~/.local/bin/claude --version)",
+      "Bash(~/.local/bin/claude:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

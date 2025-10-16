@@ -1,0 +1,14 @@
+.old
+.venv
+.vscode
+.pytest_cache
+*.pyc
+__pycache__
+src/mypkg/tests/output/
+data_store/processed
+.src/mypkg.egg.info
+
+# 내 개발용 
+dist/
+wheels/
+src/mypkg.egg-info/
