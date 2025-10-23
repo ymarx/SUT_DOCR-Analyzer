@@ -1,0 +1,81 @@
+# DeepSeek-OCR 파이프라인 설정
+
+# PDF 처리 설정
+pdf:
+  dpi: 300  # PDF → 이미지 변환 DPI
+  image_format: "PNG"  # PNG / JPEG
+  extract_images: true  # PDF 내 이미지 추출
+  extract_text: true  # PDF 텍스트 레이어 추출
+
+# 요소 추출 설정
+extraction:
+  # 최소 요소 크기 (픽셀)
+  min_width: 50
+  min_height: 50
+
+  # 텍스트 블록 병합
+  merge_text_blocks: true
+  text_merge_threshold: 20  # 픽셀 단위 거리
+
+# 분석기 설정
+analyzers:
+  # Graph Analyzer
+  graph:
+    extract_axes: true
+    extract_legend: true
+    extract_data_points: false  # 데이터 포인트 추출 (느림)
+    describe_trends: true
+
+  # Table Analyzer
+  table:
+    output_format: "markdown"  # markdown / csv / json
+    preserve_formatting: true
+    extract_headers: true
+
+  # Diagram Analyzer
+  diagram:
+    generate_mermaid: true  # Mermaid 다이어그램 생성
+    fallback_to_description: true
+    max_complexity: "high"  # low / medium / high
+
+  # Complex Image
+  complex_image:
+    use_deepseek: true  # DeepSeek-OCR 사용
+    fallback_to_qwen2vl: true
+
+# Text Enrichment 설정
+enrichment:
+  # 컨텍스트 윈도우
+  context_window: 2  # doc_index ± 2
+
+  # 병합 전략
+  merge_strategy: "inline"  # inline / append / separate
+
+  # 메타데이터 포함
+  include_metadata:
+    confidence_score: true
+    analysis_method: true
+    processing_time: true
+
+# 출력 설정
+output:
+  # DocJSON 스키마 버전
+  schema_version: "2.0"
+
+  # 저장 형식
+  formats:
+    - "json"  # DocJSON
+    - "markdown"  # 읽기 쉬운 Markdown
+
+  # 압축
+  compress: false
+
+# 벤치마크 설정
+benchmark:
+  enabled: true
+  metrics:
+    - "accuracy"
+    - "processing_time"
+    - "memory_usage"
+  save_results: true
+  results_dir: "./deepseek_test/benchmarks/results"

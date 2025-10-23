@@ -1,0 +1,1 @@
+"""DeepSeek-OCR CLI module."""

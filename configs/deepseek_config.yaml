@@ -1,0 +1,47 @@
+# DeepSeek-OCR 모델 설정
+
+model:
+  name: "deepseek-ai/DeepSeek-OCR"
+  device: "mps"  # M1 Mac: mps, Windows GPU: cuda, CPU: cpu
+  torch_dtype: "float32"  # M1 MPS 권장, GPU는 float16/bfloat16 가능
+  trust_remote_code: true
+
+inference:
+  # OCR 모드: small (빠름, 낮은 품질) / medium / large (느림, 높은 품질)
+  default_mode: "medium"
+
+  # 배치 처리 설정
+  batch_size: 1  # M1 Mac 8GB 기준
+  max_length: 4096
+
+  # 출력 설정
+  output_format: "markdown"  # markdown / json
+  include_confidence: true
+
+# 요소 분류 임계값
+classification:
+  # 각 카테고리별 신뢰도 임계값
+  thresholds:
+    text_header: 0.85
+    text_section: 0.80
+    text_paragraph: 0.75
+    graph: 0.80
+    table: 0.85
+    diagram: 0.80
+    complex_image: 0.75
+
+  # 저신뢰도 요소 처리 전략
+  fallback_strategy: "qwen2vl"  # qwen2vl / skip / manual
+
+# 성능 최적화
+performance:
+  use_cache: true
+  cache_dir: "./models/deepseek-ocr/cache"
+  num_workers: 2  # PDF 추출 병렬 처리
+
+# Windows 11 GPU 전용 설정 (M1에서는 무시됨)
+gpu:
+  device: "cuda"
+  torch_dtype: "bfloat16"
+  use_flash_attention: true
+  batch_size: 4  # RTX 4060 8GB 기준
