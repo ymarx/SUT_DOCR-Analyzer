@@ -1,14 +1,41 @@
-.old
+# Python
 .venv
 .vscode
 .pytest_cache
 *.pyc
 __pycache__
-src/mypkg/tests/output/
-data_store/processed
-.src/mypkg.egg.info
+*.egg-info/
 
-# 내 개발용 
+# Environment
+.env
+
+# Legacy files
+legacy/
+.old/
+sut-preprocess_wsl2_1_0.tar
+
+# Test data and outputs
+src/mypkg/tests/output/
+data_store/processed/
+outputs/
+deepseek_test/
+
+# Build artifacts
 dist/
 wheels/
-src/mypkg.egg-info/
+build/
+
+# Sample PDFs (프로젝트별로 관리)
+*.pdf
+TP-*.pdf
+
+# Claude docs (개발 중 메모)
+claudedocs/
+
+# macOS
+.DS_Store
+
+# Models (대용량, 사용자가 직접 다운로드)
+models/deepseek-ocr/
+models/DeepSeek-OCR/pytorch_model*.bin
+models/DeepSeek-OCR/model*.safetensors

@@ -20,23 +20,69 @@
 
 ## 🚀 빠른 시작
 
-### 1. 설치
+### 1. 저장소 클론
 
 ```bash
-# 가상환경
+git clone <repository-url>
+cd SUT_DOCR-Analyzer
+```
+
+### 2. 환경 설정
+
+```bash
+# .env 파일 생성
+cp .env.example .env
+
+# 사용 환경에 맞게 수정
+# - M1/M2/M3 Mac: DEEPSEEK_DEVICE=mps, DEEPSEEK_DTYPE=float32
+# - NVIDIA GPU (Linux/Windows): DEEPSEEK_DEVICE=cuda, DEEPSEEK_DTYPE=float16
+# - CPU only: DEEPSEEK_DEVICE=cpu, DEEPSEEK_DTYPE=float32
+```
+
+### 3. 가상환경 및 의존성 설치
+
+#### macOS (Apple Silicon)
+
+```bash
+# 가상환경 생성 및 활성화
 python -m venv .venv
 source .venv/bin/activate
 
-# 의존성
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
-pip install transformers==4.47.1 PyMuPDF pdf2image Pillow pyyaml
+# 또는 자동 설치 스크립트 사용
+chmod +x install_deepseek_macos.sh
+./install_deepseek_macos.sh
 ```
 
-### 2. 모델 다운로드
+#### Linux/Windows (NVIDIA GPU)
 
-자동 다운로드 (첫 실행 시 12.7GB)
+```bash
+# 가상환경 생성 및 활성화
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
-### 3. 문서 처리
+# PyTorch 설치 (CUDA 12.1)
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+
+# 프로젝트 의존성
+pip install -r requirements.txt
+
+# DeepSeek-OCR 의존성
+pip install -r models/DeepSeek-OCR/requirements.txt
+```
+
+### 4. DeepSeek-OCR 모델 다운로드
+
+모델은 첫 실행 시 자동으로 HuggingFace에서 다운로드됩니다 (~12.7GB).
+
+수동 다운로드를 원하는 경우:
+
+```bash
+# HuggingFace CLI 사용
+pip install huggingface_hub
+huggingface-cli download deepseek-ai/DeepSeek-OCR --local-dir ./models/DeepSeek-OCR
+```
+
+### 5. 문서 처리
 
 ```bash
 # 기본 (RTX 4060)
