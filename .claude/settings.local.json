@@ -38,7 +38,13 @@
       "Bash(brew install:*)",
       "Read(//Users/YMARX/.cache/huggingface/modules/transformers_modules/deepseek-ai/DeepSeek-OCR/968c903185ba632ccc137b22d78ba01d14611ee1/**)",
       "Read(//Users/YMARX/.cache/huggingface/modules/transformers_modules/**)",
-      "Read(//Users/YMARX/Dropbox/2025_ECMiner/CP25_P03_SUT/03_진행/**)"
+      "Read(//Users/YMARX/Dropbox/2025_ECMiner/CP25_P03_SUT/03_진행/**)",
+      "Bash(while read f)",
+      "Bash(do ls:*)",
+      "Bash(done)",
+      "Bash(/dev/null -exec ls -lh {} ;)",
+      "Bash(awk:*)",
+      "Read(//Users/YMARX/**)"
     ],
     "deny": [],
     "ask": []

@@ -23,7 +23,7 @@ class Config:
 
     # Model configuration
     model_name: str = "deepseek-ai/DeepSeek-OCR"
-    cache_dir: str = "./models/deepseek-ocr"
+    cache_dir: str = "./models/DeepSeek-OCR"  # Updated to match actual download location
     device: str = "cuda"
     dtype: str = "float16"  # RTX 4060: float16 | RTX 4090: bfloat16
 

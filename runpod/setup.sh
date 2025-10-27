@@ -52,7 +52,7 @@ echo "✅ 패키지 설치 완료"
 
 # 5. DeepSeek-OCR 모델 다운로드 확인
 echo -e "\n[5/6] DeepSeek-OCR 모델 확인..."
-MODEL_DIR="./models/deepseek-ocr"
+MODEL_DIR="./models/DeepSeek-OCR"
 
 if [ -d "$MODEL_DIR" ] && [ "$(ls -A $MODEL_DIR)" ]; then
     echo "✅ 모델이 이미 다운로드되어 있습니다: $MODEL_DIR"
@@ -63,10 +63,10 @@ from transformers import AutoModel, AutoTokenizer
 import time
 
 model_name = "deepseek-ai/DeepSeek-OCR"
-cache_dir = "./models/deepseek-ocr"
+cache_dir = "./models/DeepSeek-OCR"
 
 start = time.time()
-print("모델 다운로드 중 (12.7GB, 약 5-10분 소요)...")
+print("모델 다운로드 중 (6.2GB, 약 3-5분 소요)...")
 
 tokenizer = AutoTokenizer.from_pretrained(
     model_name,

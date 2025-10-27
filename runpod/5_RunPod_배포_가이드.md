@@ -45,7 +45,7 @@ bash runpod/setup.sh
 설정 스크립트는 자동으로 다음을 수행합니다:
 - Python 가상환경 생성
 - 의존성 패키지 설치
-- DeepSeek-OCR 모델 다운로드 (12.7GB, 5-10분)
+- DeepSeek-OCR 모델 다운로드 (6.2GB, 3-5분)
 - 출력 디렉토리 생성
 
 ### Step 3: PDF 파일 업로드
