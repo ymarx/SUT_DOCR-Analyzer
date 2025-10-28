@@ -28,7 +28,8 @@ from vllm.transformers_utils.configs.deepseek_vl2 import (DeepseekVLV2Config,
                                                           VisionEncoderConfig)
 from deepseek_ocr.engine.image_processor import (
     DeepseekOCRProcessor, count_tiles)
-from vllm.transformers_utils.tokenizer import cached_tokenizer_from_config
+# Note: cached_tokenizer_from_config removed in vLLM 0.7.0
+# Using model_config.get_tokenizer() instead
 # from vllm.utils import is_list_of
 
 from vllm.model_executor.models.interfaces import MultiModalEmbeddings, SupportsMultiModal, SupportsPP
@@ -310,7 +311,7 @@ class DeepseekOCRForCausalLM(nn.Module, SupportsMultiModal, SupportsPP):
         self.text_config = config.text_config
 
         model_config = vllm_config.model_config
-        tokenizer = cached_tokenizer_from_config(model_config)
+        tokenizer = model_config.get_tokenizer()  # vLLM 0.7.0 API
         self.image_token_id = tokenizer.vocab[_IMAGE_TOKEN]
 
         self.sam_model = build_sam_vit_b()
