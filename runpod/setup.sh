@@ -8,13 +8,18 @@ echo "============================================================"
 echo "DeepSeek-OCR RunPod 환경 설정"
 echo "============================================================"
 
-# 1. 시스템 정보 확인
-echo -e "\n[1/6] 시스템 정보 확인..."
+# 1. 시스템 패키지 설치
+echo -e "\n[1/7] 시스템 패키지 설치..."
+apt-get update && apt-get install -y poppler-utils
+echo "✅ poppler-utils 설치 완료"
+
+# 2. 시스템 정보 확인
+echo -e "\n[2/7] 시스템 정보 확인..."
 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
 python --version
 
-# 2. 작업 디렉토리 설정
-echo -e "\n[2/6] 작업 디렉토리 설정..."
+# 3. 작업 디렉토리 설정
+echo -e "\n[3/7] 작업 디렉토리 설정..."
 
 # 스크립트가 실행되는 위치에서 프로젝트 루트 찾기
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -23,8 +28,8 @@ WORK_DIR="$(dirname "$SCRIPT_DIR")"
 cd "$WORK_DIR"
 echo "✅ 작업 디렉토리: $WORK_DIR"
 
-# 3. Python 가상환경 생성
-echo -e "\n[3/6] Python 가상환경 설정..."
+# 4. Python 가상환경 생성
+echo -e "\n[4/7] Python 가상환경 설정..."
 if [ ! -d ".venv" ]; then
     python -m venv .venv
     echo "✅ 가상환경 생성 완료"
@@ -34,8 +39,8 @@ fi
 
 source .venv/bin/activate
 
-# 4. 의존성 설치
-echo -e "\n[4/6] 의존성 패키지 설치..."
+# 5. 의존성 설치
+echo -e "\n[5/7] 의존성 패키지 설치..."
 pip install --upgrade pip
 
 # 필수 패키지
@@ -47,8 +52,8 @@ pip install hf_transfer addict einops easydict
 
 echo "✅ 패키지 설치 완료"
 
-# 5. DeepSeek-OCR 모델 다운로드 확인
-echo -e "\n[5/6] DeepSeek-OCR 모델 확인..."
+# 6. DeepSeek-OCR 모델 다운로드 확인
+echo -e "\n[6/7] DeepSeek-OCR 모델 확인..."
 MODEL_DIR="./models/DeepSeek-OCR"
 
 if [ -d "$MODEL_DIR" ] && [ "$(ls -A $MODEL_DIR)" ]; then
@@ -83,8 +88,8 @@ print(f"✅ 모델 다운로드 완료! ({elapsed/60:.1f}분 소요)")
 PYTHON
 fi
 
-# 6. 출력 디렉토리 생성
-echo -e "\n[6/6] 출력 디렉토리 생성..."
+# 7. 출력 디렉토리 생성
+echo -e "\n[7/7] 출력 디렉토리 생성..."
 mkdir -p outputs/cropped_images/{graph,table,diagram,complex_image}
 echo "✅ 출력 디렉토리 준비 완료"
 
