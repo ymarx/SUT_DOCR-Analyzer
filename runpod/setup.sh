@@ -15,14 +15,10 @@ python --version
 
 # 2. 작업 디렉토리 설정
 echo -e "\n[2/6] 작업 디렉토리 설정..."
-cd /workspace
-WORK_DIR="/workspace/sut-preprocess"
 
-if [ ! -d "$WORK_DIR" ]; then
-    echo "프로젝트 디렉토리가 없습니다. 먼저 프로젝트를 업로드하세요."
-    echo "예: rsync -avz --progress local/sut-preprocess-main/ runpod:/workspace/sut-preprocess/"
-    exit 1
-fi
+# 스크립트가 실행되는 위치에서 프로젝트 루트 찾기
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+WORK_DIR="$(dirname "$SCRIPT_DIR")"
 
 cd "$WORK_DIR"
 echo "✅ 작업 디렉토리: $WORK_DIR"
