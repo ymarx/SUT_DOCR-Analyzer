@@ -26,7 +26,7 @@ from vllm.sequence import IntermediateTensors
 from vllm.transformers_utils.configs.deepseek_vl2 import (DeepseekVLV2Config,
                                                           MlpProjectorConfig,
                                                           VisionEncoderConfig)
-from ...engine.image_processor import (
+from deepseek_ocr.engine.image_processor import (
     DeepseekOCRProcessor, count_tiles)
 from vllm.transformers_utils.tokenizer import cached_tokenizer_from_config
 # from vllm.utils import is_list_of
