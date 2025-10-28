@@ -12,37 +12,10 @@ from typing import Dict, Any
 # ---------------------------
 # Pass 1: Page Structure Analysis
 # ---------------------------
-STRUCTURE_ANALYSIS_PROMPT = """<image>
-<|grounding|>Analyze this document page and detect all elements with bounding boxes.
-
-Classify each element into one of these types:
-1. text_header: Document headers, titles (large font)
-2. text_section: Section headings with numbering (e.g., "1.", "1.1.", "1.1.1.")
-3. text_paragraph: Regular paragraphs and body text
-4. table: Tables with rows and columns
-5. graph: Charts, graphs, plots (line charts, bar charts, etc.)
-6. diagram: Flowcharts, process diagrams, schematics
-7. complex_image: Images, photos, or overly complex visual elements
-
-For each element, provide:
-- element_type: One of the 7 types above
-- bbox: Bounding box coordinates [x1, y1, x2, y2]
-- confidence: Detection confidence (0.0-1.0)
-- text_preview: First 10-20 characters (for text elements only)
-
-Output format (JSON):
-{
-  "elements": [
-    {
-      "element_id": "e1",
-      "element_type": "text_header",
-      "bbox": [x1, y1, x2, y2],
-      "confidence": 0.95,
-      "text_preview": "노열관리 기준"
-    },
-    ...
-  ]
-}"""
+# Official DeepSeek-OCR grounding prompt (from DeepSeek-OCR-vllm/config.py:27)
+# Uses <|grounding|> token to activate layout detection mode
+# Output format: <|ref|>label<|/ref|><|det|>[x1,y1,x2,y2]<|/det|> + markdown content
+STRUCTURE_ANALYSIS_PROMPT = "<image>\n<|grounding|>Convert the document to markdown."
 
 
 # ---------------------------

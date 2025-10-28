@@ -105,9 +105,6 @@ def process_single_pdf(
 
         elapsed = time.time() - start_time
 
-        # 정리
-        engine.unload()
-
         result = {
             "status": "success",
             "pdf": pdf_path.name,
@@ -139,6 +136,15 @@ def process_single_pdf(
             "error": str(e),
             "elapsed": elapsed,
         }
+
+    finally:
+        # 항상 리소스 정리 (성공/실패 여부와 무관)
+        if 'engine' in locals():
+            try:
+                engine.unload()
+                print("✅ 엔진 리소스 정리 완료")
+            except Exception as cleanup_error:
+                print(f"⚠️ 엔진 정리 중 경고: {cleanup_error}")
 
 
 def main():

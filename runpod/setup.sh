@@ -47,15 +47,30 @@ pip install --upgrade pip
 echo "PyTorch 설치 중..."
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
 
-# vLLM 환경 변수 설정
+# vLLM 환경 변수 설정 (영구 저장)
 echo "vLLM 환경 변수 설정..."
+
+# 현재 세션에 적용
 export VLLM_USE_V1=0
 export CUDA_VISIBLE_DEVICES=0
+
+# ~/.bashrc에 영구 저장 (RunPod 재시작 후에도 유지)
+if ! grep -q "VLLM_USE_V1" ~/.bashrc; then
+    echo "# DeepSeek-OCR vLLM Environment Variables" >> ~/.bashrc
+    echo "export VLLM_USE_V1=0" >> ~/.bashrc
+    echo "export CUDA_VISIBLE_DEVICES=0" >> ~/.bashrc
+    echo "✅ vLLM 환경 변수를 ~/.bashrc에 저장"
+else
+    echo "✅ vLLM 환경 변수가 이미 ~/.bashrc에 존재"
+fi
 
 # Check CUDA version for TRITON_PTXAS_PATH
 CUDA_VERSION=$(nvcc --version 2>/dev/null | grep -oP 'release \K[0-9.]+' || echo "unknown")
 if [[ "$CUDA_VERSION" == "11.8" ]]; then
     export TRITON_PTXAS_PATH="/usr/local/cuda-11.8/bin/ptxas"
+    if ! grep -q "TRITON_PTXAS_PATH" ~/.bashrc; then
+        echo "export TRITON_PTXAS_PATH=\"/usr/local/cuda-11.8/bin/ptxas\"" >> ~/.bashrc
+    fi
     echo "CUDA 11.8 detected - TRITON_PTXAS_PATH set"
 fi
 

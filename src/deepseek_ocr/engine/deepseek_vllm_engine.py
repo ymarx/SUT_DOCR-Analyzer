@@ -178,18 +178,38 @@ class DeepSeekVLLMEngine:
 
         # vLLM batch inference (single call for all images)
         print(f"Running vLLM batch inference ({len(batch_inputs)} images)...")
-        outputs = self.llm.generate(batch_inputs, self.sampling_params)
+
+        try:
+            outputs = self.llm.generate(batch_inputs, self.sampling_params)
+        except RuntimeError as e:
+            if "out of memory" in str(e).lower() or "oom" in str(e).lower():
+                print(f"⚠️ OOM Error during batch inference. Try reducing max_num_seqs or batch size.")
+                print(f"   Current: max_num_seqs={self.config.max_num_seqs}, batch_size={len(batch_inputs)}")
+                raise RuntimeError(
+                    f"vLLM OOM: {len(batch_inputs)} images exceeded GPU memory. "
+                    f"Reduce max_num_seqs (current: {self.config.max_num_seqs}) or process fewer images."
+                ) from e
+            else:
+                print(f"❌ vLLM inference error: {e}")
+                raise RuntimeError(f"vLLM batch inference failed: {e}") from e
+        except Exception as e:
+            print(f"❌ Unexpected error during vLLM inference: {type(e).__name__}: {e}")
+            raise RuntimeError(f"vLLM batch inference failed unexpectedly: {e}") from e
 
         # Extract responses
         responses = []
         for output in outputs:
-            response = output.outputs[0].text
+            try:
+                response = output.outputs[0].text
 
-            # Clean up response (remove special tokens if needed)
-            if "<｜end▁of▁sentence｜>" in response:
-                response = response.replace("<｜end▁of▁sentence｜>", "")
+                # Clean up response (remove special tokens if needed)
+                if "<｜end▁of▁sentence｜>" in response:
+                    response = response.replace("<｜end▁of▁sentence｜>", "")
 
-            responses.append(response)
+                responses.append(response)
+            except (IndexError, AttributeError) as e:
+                print(f"⚠️ Warning: Failed to extract response from output: {e}")
+                responses.append("")  # Empty response as fallback
 
         # Clear CUDA cache
         if self._device == "cuda":
