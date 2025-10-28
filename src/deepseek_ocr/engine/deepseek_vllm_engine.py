@@ -56,12 +56,20 @@ class DeepSeekVLLMEngine:
 
         print(f"Loading DeepSeek-OCR vLLM model from {self.config.cache_dir}...")
 
-        # Register DeepSeek-OCR model architecture
-        try:
-            from deepseek_ocr import DeepseekOCRForCausalLM
-            ModelRegistry.register_model("DeepseekOCRForCausalLM", DeepseekOCRForCausalLM)
-        except ImportError:
-            print("⚠️ Warning: deepseek_ocr module not found. Using default registration.")
+        # Import and configure vLLM model architecture
+        from ..vllm_model import DeepseekOCRForCausalLM
+
+        # Configure model globals BEFORE registration
+        DeepseekOCRForCausalLM.configure_globals(
+            image_size=self.config.image_size,
+            base_size=self.config.base_size,
+            crop_mode=self.config.crop_mode,
+            print_tokens=False,
+        )
+
+        # Register model with vLLM
+        ModelRegistry.register_model("DeepseekOCRForCausalLM", DeepseekOCRForCausalLM)
+        print("✅ DeepseekOCRForCausalLM registered with vLLM ModelRegistry")
 
         # Set CUDA environment
         if self.config.device == "cuda":
