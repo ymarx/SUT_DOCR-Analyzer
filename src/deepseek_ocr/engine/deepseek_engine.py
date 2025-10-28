@@ -94,27 +94,35 @@ class DeepSeekEngine:
         prompt: str,
     ) -> str:
         """
-        Generic inference method.
+        Generic inference using official DeepSeek-OCR API.
 
         Args:
             image: PIL Image
-            prompt: Prompt string with <image> placeholder
+            prompt: Prompt string from prompts.py (already correctly formatted)
+                    e.g., "<image>\n<|grounding|>Analyze this document..."
 
         Returns:
             Model response string
+
+        Note:
+            The official infer() method handles all preprocessing internally:
+            1. Creates conversation format with role/content/images
+            2. Calls format_messages() to convert to DeepSeek format
+            3. Calls load_pil_images() to extract/load images
+            4. Calls dynamic_preprocess() for image preprocessing
+            5. Performs model inference
+
+            We simply pass the prompt as-is from prompts.py.
         """
         self._load_model()
 
-        # Format prompt (manual formatting, no chat template)
-        formatted_prompt = f"<｜User｜>: {prompt}\n\n<｜Assistant｜>:"
-
         try:
-            # Use model's infer method with official API
-            # Official signature: infer(tokenizer, prompt, image_file, output_path, base_size, image_size, crop_mode, test_compress, save_results, eval_mode)
+            # Use official API - prompt is already correctly formatted in prompts.py
+            # The official infer() method handles all internal formatting and preprocessing
             response = self.model.infer(
                 tokenizer=self.tokenizer,
-                prompt=formatted_prompt,
-                image_file=image,
+                prompt=prompt,  # ✅ Use original prompt (no manual formatting!)
+                image_file=image,  # PIL Image (official API accepts this)
                 base_size=self.config.base_size,
                 image_size=self.config.image_size,
                 crop_mode=self.config.crop_mode,
