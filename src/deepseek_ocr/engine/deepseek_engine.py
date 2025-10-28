@@ -109,18 +109,15 @@ class DeepSeekEngine:
         formatted_prompt = f"<｜User｜>: {prompt}\n\n<｜Assistant｜>:"
 
         try:
-            # Use model's infer method with configuration
+            # Use model's infer method with official API
+            # Official signature: infer(tokenizer, prompt, image_file, output_path, base_size, image_size, crop_mode, test_compress, save_results, eval_mode)
             response = self.model.infer(
-                self.tokenizer,
+                tokenizer=self.tokenizer,
                 prompt=formatted_prompt,
                 image_file=image,
                 base_size=self.config.base_size,
                 image_size=self.config.image_size,
                 crop_mode=self.config.crop_mode,
-                max_new_tokens=self.config.max_new_tokens,
-                temperature=self.config.temperature,
-                top_p=self.config.top_p,
-                do_sample=self.config.do_sample,
             )
 
             return response
