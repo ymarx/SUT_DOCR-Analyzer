@@ -43,6 +43,7 @@ pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
 pip install transformers==4.47.1
 pip install PyMuPDF pdf2image Pillow
 pip install pyyaml
+pip install hf_transfer
 
 echo "✅ 패키지 설치 완료"
 
