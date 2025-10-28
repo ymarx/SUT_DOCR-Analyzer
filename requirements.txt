@@ -2,8 +2,8 @@
 torch>=2.0.0
 torchvision>=0.15.0
 
-# vLLM for Fast Inference
-vllm>=0.6.0
+# vLLM for Fast Inference (pinned to 0.6.3 for DeepSeek-OCR compatibility)
+vllm==0.6.3
 
 # HuggingFace Transformers (required by vLLM)
 transformers==4.47.1

@@ -20,7 +20,8 @@ from vllm.multimodal.inputs import (MultiModalDataDict, MultiModalFieldConfig,
 from vllm.multimodal.parse import (ImageEmbeddingItems, ImageProcessorItems,
                                    ImageSize, MultiModalDataItems)
 from vllm.multimodal.processing import (BaseMultiModalProcessor,
-                                        BaseProcessingInfo, PromptReplacement)
+                                        BaseProcessingInfo, PromptReplacement,
+                                        PromptUpdate)
 from vllm.multimodal.profiling import BaseDummyInputsBuilder
 from vllm.sequence import IntermediateTensors
 from vllm.transformers_utils.configs.deepseek_vl2 import (DeepseekVLV2Config,
@@ -28,8 +29,7 @@ from vllm.transformers_utils.configs.deepseek_vl2 import (DeepseekVLV2Config,
                                                           VisionEncoderConfig)
 from deepseek_ocr.engine.image_processor import (
     DeepseekOCRProcessor, count_tiles)
-# Note: cached_tokenizer_from_config removed in vLLM 0.7.0
-# Using model_config.get_tokenizer() instead
+from vllm.transformers_utils.tokenizer import cached_tokenizer_from_config
 # from vllm.utils import is_list_of
 
 from vllm.model_executor.models.interfaces import MultiModalEmbeddings, SupportsMultiModal, SupportsPP
@@ -199,7 +199,7 @@ class DeepseekOCRMultiModalProcessor(
         mm_items: MultiModalDataItems,
         hf_processor_mm_kwargs: Mapping[str, object],
         out_mm_kwargs: MultiModalKwargs,
-    ) -> Sequence[PromptReplacement]:
+    ) -> Sequence[PromptUpdate]:
         hf_processor = self.info.get_hf_processor(**hf_processor_mm_kwargs)
 
         image_token_id = hf_processor.image_token_id
@@ -311,7 +311,7 @@ class DeepseekOCRForCausalLM(nn.Module, SupportsMultiModal, SupportsPP):
         self.text_config = config.text_config
 
         model_config = vllm_config.model_config
-        tokenizer = model_config.get_tokenizer()  # vLLM 0.7.0 API
+        tokenizer = cached_tokenizer_from_config(model_config)
         self.image_token_id = tokenizer.vocab[_IMAGE_TOKEN]
 
         self.sam_model = build_sam_vit_b()

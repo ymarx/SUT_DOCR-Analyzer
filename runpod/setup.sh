@@ -74,11 +74,11 @@ if [[ "$CUDA_VERSION" == "11.8" ]]; then
     echo "CUDA 11.8 detected - TRITON_PTXAS_PATH set"
 fi
 
-# Install from requirements.txt (includes vllm>=0.6.0)
-echo "requirements.txt에서 패키지 설치 중 (vLLM 포함)..."
+# Install from requirements.txt (includes vllm==0.6.3)
+echo "requirements.txt에서 패키지 설치 중 (vLLM 0.6.3 설치)..."
 pip install -r requirements.txt
 
-echo "✅ 패키지 설치 완료 (vLLM 포함)"
+echo "✅ 패키지 설치 완료 (vLLM 0.6.3 설치됨)"
 
 # 6. DeepSeek-OCR 모델 다운로드 확인
 echo -e "\n[6/7] DeepSeek-OCR 모델 확인..."
