@@ -44,7 +44,8 @@
       "Bash(done)",
       "Bash(/dev/null -exec ls -lh {} ;)",
       "Bash(awk:*)",
-      "Read(//Users/YMARX/**)"
+      "Read(//Users/YMARX/**)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []

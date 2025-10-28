@@ -20,62 +20,84 @@ DeepSeek-OCR 프로젝트를 RunPod에서 실행하기 위한 가이드입니다
 
 ---
 
-## 🚀 빠른 시작
+## 🚀 빠른 시작 (Web Terminal 방식 권장)
 
-### Step 1: 프로젝트 업로드
+### Step 1: RunPod Pod 생성 및 접속
+
+1. RunPod에서 GPU Pod 생성 (권장: RTX 4090 또는 A40)
+2. Web Terminal 열기 (또는 SSH 접속)
+
+### Step 2: 프로젝트 클론
 
 ```bash
-# 로컬에서 RunPod로 프로젝트 전송
-rsync -avz --progress sut-preprocess-main/ \
-    root@<POD_IP>:/workspace/sut-preprocess/
+# Web Terminal에서 실행
+cd /workspace
+git clone https://github.com/ymarx/SUT_DOCR-Analyzer.git
+cd SUT_DOCR-Analyzer
 ```
 
-### Step 2: 환경 설정
+### Step 3: 환경 설정 (자동화)
 
 ```bash
-# RunPod SSH 접속
-ssh root@<POD_IP>
+# 실행 권한 부여
+chmod +x runpod/setup.sh
 
 # 환경 설정 스크립트 실행
-cd /workspace/sut-preprocess
-chmod +x runpod/setup.sh
 bash runpod/setup.sh
 ```
 
-설정 스크립트는 자동으로 다음을 수행합니다:
-- Python 가상환경 생성
-- 의존성 패키지 설치
-- DeepSeek-OCR 모델 다운로드 (6.2GB, 3-5분)
-- 출력 디렉토리 생성
+**setup.sh는 자동으로 다음을 수행합니다:**
+- ✅ poppler-utils 시스템 패키지 설치
+- ✅ Python 가상환경 생성 (.venv)
+- ✅ PyTorch + CUDA 12.1 설치
+- ✅ 모든 Python 의존성 설치 (requirements.txt)
+  - hf_transfer (고속 다운로드)
+  - addict, einops, easydict (DeepSeek-OCR 필수)
+  - transformers, PyMuPDF, pdf2image 등
+- ✅ DeepSeek-OCR 모델 다운로드 (6.2GB, 3-5분)
+- ✅ 출력 디렉토리 생성
 
-### Step 3: PDF 파일 업로드
+### Step 4: PDF 파일 업로드
 
+**방법 1: Web Terminal 파일 업로드 기능 (간편)**
+1. Web Terminal 상단의 "Upload" 버튼 클릭
+2. `pdfs/` 디렉토리에 PDF 파일 업로드
+
+**방법 2: rsync (대용량)**
 ```bash
-# 로컬에서 PDF 파일 업로드
-rsync -avz --progress pdfs/ \
-    root@<POD_IP>:/workspace/sut-preprocess/pdfs/
+# 로컬 터미널에서
+rsync -avz --progress -e "ssh -p <PORT>" pdfs/ \
+    root@<POD_IP>:/workspace/SUT_DOCR-Analyzer/pdfs/
 ```
 
-### Step 4: 배치 처리 실행
+### Step 5: 배치 처리 실행
 
 ```bash
+# pdfs/ 디렉토리 생성 및 PDF 파일 업로드 후
+mkdir -p pdfs
+
 # 가상환경 활성화
-cd /workspace/sut-preprocess
 source .venv/bin/activate
 
-# 배치 처리 실행
+# 배치 처리 실행 (A40/RTX 4090)
 python runpod/process.py \
     --input pdfs/ \
     --output outputs/ \
     --preset rtx4090
+
+# RTX 4060 등 메모리 제한 시
+python runpod/process.py \
+    --input pdfs/ \
+    --output outputs/ \
+    --preset rtx4060
 ```
 
-### Step 5: 결과 다운로드
+### Step 6: 결과 다운로드
 
 ```bash
-# 로컬에서 결과 다운로드
-rsync -avz --progress \
-    root@<POD_IP>:/workspace/sut-preprocess/outputs/ \
+# 로컬 터미널에서 결과 다운로드
+rsync -avz --progress -e "ssh -p <PORT>" \
+    root@<POD_IP>:/workspace/SUT_DOCR-Analyzer/outputs/ \
     ./outputs/
 ```
 
@@ -196,12 +218,55 @@ PYTHON
 
 ### 3. PDF 파싱 오류
 
-**증상**: `PDF parsing failed`
+**증상**: `Unable to get page count. Is poppler installed and in PATH?`
+
+**원인**: poppler-utils 미설치 (pdf2image 의존성)
 
 **해결**:
 ```bash
-# poppler-utils 설치 (pdf2image 의존성)
+# poppler-utils 설치
 apt-get update && apt-get install -y poppler-utils
+
+# 설치 확인
+pdftoppm -v
+```
+
+### 4. 의존성 패키지 누락
+
+**증상**: `ImportError: No module named 'addict'` (또는 einops, easydict, hf_transfer)
+
+**원인**: DeepSeek-OCR 필수 패키지 미설치
+
+**해결**:
+```bash
+# 가상환경 활성화
+source .venv/bin/activate
+
+# 누락된 패키지 설치
+pip install addict einops easydict hf_transfer
+
+# 또는 전체 재설치
+pip install -r requirements.txt
+```
+
+### 5. 모델 다운로드 관련 오류
+
+**증상**: `ValueError: hf_transfer package is not available`
+
+**해결**:
+```bash
+pip install hf_transfer
+
+# 모델 수동 다운로드
+python << 'EOF'
+from transformers import AutoModel, AutoTokenizer
+model = AutoModel.from_pretrained(
+    "deepseek-ai/DeepSeek-OCR",
+    cache_dir="./models/DeepSeek-OCR",
+    trust_remote_code=True,
+    torch_dtype="auto"
+)
+EOF
 ```
 
 ---

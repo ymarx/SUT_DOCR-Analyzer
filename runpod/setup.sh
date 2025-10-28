@@ -43,12 +43,13 @@ source .venv/bin/activate
 echo -e "\n[5/7] 의존성 패키지 설치..."
 pip install --upgrade pip
 
-# 필수 패키지
+# PyTorch with CUDA 12.1 support
+echo "PyTorch 설치 중..."
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
-pip install transformers==4.47.1
-pip install PyMuPDF pdf2image Pillow
-pip install pyyaml
-pip install hf_transfer addict einops easydict
+
+# Install from requirements.txt
+echo "requirements.txt에서 패키지 설치 중..."
+pip install -r requirements.txt
 
 echo "✅ 패키지 설치 완료"
 
