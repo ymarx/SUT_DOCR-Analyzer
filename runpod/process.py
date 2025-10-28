@@ -20,10 +20,10 @@ from typing import List, Dict, Any
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from deepseek_ocr.core.config import Config, load_config
-from deepseek_ocr.engine.deepseek_engine import DeepSeekEngine
+from deepseek_ocr.engine.deepseek_vllm_engine import DeepSeekVLLMEngine
 from deepseek_ocr.pipeline.pdf_parser import PDFParser
-from deepseek_ocr.pipeline.structure_analyzer import PageStructureAnalyzer
-from deepseek_ocr.pipeline.element_analyzer import ElementAnalyzer
+from deepseek_ocr.pipeline.structure_analyzer_vllm import PageStructureAnalyzerVLLM
+from deepseek_ocr.pipeline.element_analyzer_vllm import ElementAnalyzerVLLM
 from deepseek_ocr.pipeline.text_enricher import TextEnricher
 
 
@@ -55,37 +55,40 @@ def process_single_pdf(
         pages = parser.parse(pdf_path)
         print(f"✅ PDF 파싱: {len(pages)} 페이지")
 
-        # 엔진 초기화
-        engine = DeepSeekEngine(config)
+        # vLLM 엔진 초기화
+        engine = DeepSeekVLLMEngine(config)
 
-        # Pass 1: 구조 분석
-        print(f"\nPass 1: 페이지 구조 분석...")
-        structure_analyzer = PageStructureAnalyzer(engine)
-        structures = []
+        # Pass 1: 배치 구조 분석
+        print(f"\nPass 1: 페이지 구조 분석 (배치 모드)...")
+        structure_analyzer = PageStructureAnalyzerVLLM(engine)
 
-        for page in pages:
-            structure = structure_analyzer.analyze(page.image, page.page_number)
-            structures.append(structure)
+        # 배치 처리 (전체 페이지 동시 분석)
+        page_images = [p.image for p in pages]
+        page_nums = [p.page_number for p in pages]
+        structures = structure_analyzer.analyze_batch(page_images, page_nums)
 
         total_elements = sum(len(s.elements) for s in structures)
         print(f"✅ Pass 1 완료: {total_elements}개 요소 감지")
 
-        # Pass 2: 요소 분석
-        print(f"\nPass 2: 요소 상세 분석...")
-        element_analyzer = ElementAnalyzer(engine)
-        analyses = {}
+        # Pass 2: 배치 요소 분석
+        print(f"\nPass 2: 요소 상세 분석 (배치 모드)...")
+        element_analyzer = ElementAnalyzerVLLM(engine)
 
-        elem_count = 0
-        for page_idx, structure in enumerate(structures):
-            page_image = pages[page_idx].image
+        # 모든 요소 수집
+        all_elements = []
+        for structure in structures:
+            all_elements.extend(structure.elements)
 
-            for element in structure.elements:
-                elem_count += 1
-                if elem_count % 10 == 0:
-                    print(f"  진행: {elem_count}/{total_elements} ({elem_count*100//total_elements}%)")
-
-                analysis = element_analyzer.analyze(element, page_image, structure.elements)
-                analyses[element.element_id] = analysis
+        # 배치 처리 (전체 요소 동시 분석)
+        if all_elements:
+            analyses_list = element_analyzer.analyze_batch(
+                elements=all_elements,
+                page_images=page_images,
+                page_structures=structures,
+            )
+            analyses = {analysis.element_id: analysis for analysis in analyses_list}
+        else:
+            analyses = {}
 
         print(f"✅ Pass 2 완료: {len(analyses)}개 요소 분석")
 

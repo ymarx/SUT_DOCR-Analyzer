@@ -13,35 +13,49 @@ import yaml
 @dataclass
 class Config:
     """
-    DeepSeek-OCR configuration.
+    DeepSeek-OCR configuration for vLLM engine.
 
-    RTX 4060 8GB optimizations:
-    - dtype: float16 (50% memory reduction)
-    - batch_size: 1 (process one image at a time)
-    - max_memory: 7.5GB (reserve 500MB buffer)
+    vLLM optimizations:
+    - PagedAttention for memory efficiency
+    - Batch processing with dynamic scheduling
+    - Parallel image preprocessing
     """
+
+    # Engine type
+    engine_type: str = "vllm"  # "vllm" or "hf" (HuggingFace Transformers)
 
     # Model configuration
     model_name: str = "deepseek-ai/DeepSeek-OCR"
-    cache_dir: str = "./models/DeepSeek-OCR"  # Updated to match actual download location
+    cache_dir: str = "./models/DeepSeek-OCR"
     device: str = "cuda"
-    dtype: str = "float16"  # RTX 4060: float16 | RTX 4090: bfloat16
+    dtype: str = "bfloat16"  # RTX 4090: bfloat16 | RTX 4060: float16
 
-    # Inference settings
-    batch_size: int = 1
-    base_size: int = 1024  # Resolution mode: 512/640/1024/1280
-    image_size: int = 640  # Crop size for Pass 2
-    crop_mode: bool = True  # Enable Gundam mode (base_size + crop)
+    # vLLM-specific settings
+    max_num_seqs: int = 100  # Concurrent sequences (RTX 4090: 100, RTX 4060: 10)
+    gpu_memory_utilization: float = 0.9  # GPU memory usage (RTX 4090: 0.9, RTX 4060: 0.75)
+    block_size: int = 256  # PagedAttention block size
+    tensor_parallel_size: int = 1  # Tensor parallelism (1 for single GPU)
 
-    # Memory optimization (RTX 4060 8GB)
-    max_memory: Dict[str, str] = field(default_factory=lambda: {"cuda:0": "7.5GB"})
+    # Preprocessing workers
+    num_workers: int = 64  # Parallel image preprocessing workers
+
+    # Image processing settings
+    batch_size: int = 1  # Deprecated for vLLM (use max_num_seqs instead)
+    base_size: int = 1024  # Global view size (Gundam mode)
+    image_size: int = 640  # Crop tile size (Gundam mode)
+    crop_mode: bool = True  # Enable dynamic preprocessing (Gundam mode)
+    min_crops: int = 2  # Minimum crop tiles
+    max_crops: int = 6  # Maximum crop tiles (reduce for low memory)
+
+    # Memory optimization (deprecated for vLLM)
+    max_memory: Dict[str, str] = field(default_factory=lambda: {"cuda:0": "23GB"})
     low_cpu_mem_usage: bool = True
 
-    # Generation settings
-    max_new_tokens: int = 512
-    temperature: float = 0.1  # Low temperature for deterministic output
-    top_p: float = 0.9
-    do_sample: bool = False  # Greedy decoding for consistency
+    # Generation settings (deprecated for vLLM - use SamplingParams)
+    max_new_tokens: int = 8192  # Max tokens for vLLM
+    temperature: float = 0.0  # Greedy decoding (vLLM default)
+    top_p: float = 1.0
+    do_sample: bool = False
 
     # Pipeline settings
     pdf_dpi: int = 200  # PDF to image DPI (200 recommended, 300 for high quality)
@@ -110,22 +124,30 @@ class Config:
                 (Path(self.image_output_dir) / subdir).mkdir(parents=True, exist_ok=True)
 
 
-# Preset configurations
+# Preset configurations for vLLM
 RTX_4060_CONFIG = Config(
+    engine_type="vllm",
     device="cuda",
     dtype="float16",
-    batch_size=1,
     base_size=1024,
     image_size=640,
+    max_num_seqs=10,  # Limited concurrency for 8GB VRAM
+    gpu_memory_utilization=0.75,
+    num_workers=32,  # Fewer preprocessing workers
+    max_crops=4,  # Reduced for memory
     max_memory={"cuda:0": "7.5GB"},
 )
 
 RTX_4090_CONFIG = Config(
+    engine_type="vllm",
     device="cuda",
     dtype="bfloat16",
-    batch_size=1,
-    base_size=1280,
-    image_size=1024,
+    base_size=1024,
+    image_size=640,
+    max_num_seqs=100,  # High concurrency for 24GB VRAM
+    gpu_memory_utilization=0.9,
+    num_workers=64,
+    max_crops=6,
     max_memory={"cuda:0": "23GB"},
 )
 

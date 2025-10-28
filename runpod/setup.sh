@@ -47,11 +47,23 @@ pip install --upgrade pip
 echo "PyTorch 설치 중..."
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
 
-# Install from requirements.txt
-echo "requirements.txt에서 패키지 설치 중..."
+# vLLM 환경 변수 설정
+echo "vLLM 환경 변수 설정..."
+export VLLM_USE_V1=0
+export CUDA_VISIBLE_DEVICES=0
+
+# Check CUDA version for TRITON_PTXAS_PATH
+CUDA_VERSION=$(nvcc --version 2>/dev/null | grep -oP 'release \K[0-9.]+' || echo "unknown")
+if [[ "$CUDA_VERSION" == "11.8" ]]; then
+    export TRITON_PTXAS_PATH="/usr/local/cuda-11.8/bin/ptxas"
+    echo "CUDA 11.8 detected - TRITON_PTXAS_PATH set"
+fi
+
+# Install from requirements.txt (includes vllm>=0.6.0)
+echo "requirements.txt에서 패키지 설치 중 (vLLM 포함)..."
 pip install -r requirements.txt
 
-echo "✅ 패키지 설치 완료"
+echo "✅ 패키지 설치 완료 (vLLM 포함)"
 
 # 6. DeepSeek-OCR 모델 다운로드 확인
 echo -e "\n[6/7] DeepSeek-OCR 모델 확인..."

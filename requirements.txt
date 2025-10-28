@@ -2,7 +2,10 @@
 torch>=2.0.0
 torchvision>=0.15.0
 
-# HuggingFace Transformers
+# vLLM for Fast Inference
+vllm>=0.6.0
+
+# HuggingFace Transformers (required by vLLM)
 transformers==4.47.1
 accelerate>=0.26.0
 hf_transfer>=0.1.9

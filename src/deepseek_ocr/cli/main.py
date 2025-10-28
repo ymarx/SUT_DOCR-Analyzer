@@ -13,10 +13,10 @@ from pathlib import Path
 from typing import Dict
 
 from ..core.config import Config, load_config
-from ..engine.deepseek_engine import DeepSeekEngine
+from ..engine.deepseek_vllm_engine import DeepSeekVLLMEngine
 from ..pipeline.pdf_parser import PDFParser
-from ..pipeline.structure_analyzer import PageStructureAnalyzer
-from ..pipeline.element_analyzer import ElementAnalyzer
+from ..pipeline.structure_analyzer_vllm import PageStructureAnalyzerVLLM
+from ..pipeline.element_analyzer_vllm import ElementAnalyzerVLLM
 from ..pipeline.text_enricher import TextEnricher
 
 # Setup logging
@@ -52,38 +52,48 @@ def process_document(pdf_path: str, config: Config) -> None:
     pages = parser.parse(pdf_path)
     logger.info(f"✅ Parsed {len(pages)} pages")
 
-    # Step 2: Initialize engine
-    logger.info("\n[Step 2/5] Loading DeepSeek-OCR model...")
-    engine = DeepSeekEngine(config)
-    logger.info("✅ Engine initialized")
+    # Step 2: Initialize vLLM engine
+    logger.info("\n[Step 2/5] Loading DeepSeek-OCR vLLM model...")
+    engine = DeepSeekVLLMEngine(config)
+    logger.info("✅ vLLM engine initialized")
 
-    # Step 3: Pass 1 - Structure analysis
-    logger.info("\n[Step 3/5] Pass 1: Analyzing page structures...")
-    structure_analyzer = PageStructureAnalyzer(engine)
-    structures = []
+    # Step 3: Pass 1 - Batch structure analysis
+    logger.info("\n[Step 3/5] Pass 1: Analyzing page structures (batch mode)...")
+    structure_analyzer = PageStructureAnalyzerVLLM(engine)
 
-    for page in pages:
-        structure = structure_analyzer.analyze(page.image, page.page_number)
-        structures.append(structure)
+    # Extract page images and numbers
+    page_images = [p.image for p in pages]
+    page_nums = [p.page_number for p in pages]
+
+    # Batch analyze all pages simultaneously
+    structures = structure_analyzer.analyze_batch(page_images, page_nums)
 
     total_elements = sum(len(s.elements) for s in structures)
     logger.info(f"✅ Pass 1 complete: {total_elements} elements detected across {len(pages)} pages")
 
-    # Step 4: Pass 2 - Element analysis
-    logger.info("\n[Step 4/5] Pass 2: Analyzing elements in detail...")
-    element_analyzer = ElementAnalyzer(engine)
-    analyses = {}
+    # Step 4: Pass 2 - Batch element analysis
+    logger.info("\n[Step 4/5] Pass 2: Analyzing elements in detail (batch mode)...")
+    element_analyzer = ElementAnalyzerVLLM(engine)
 
-    elem_count = 0
-    for page_idx, structure in enumerate(structures):
-        page_image = pages[page_idx].image
+    # Collect all elements from all pages
+    all_elements = []
+    for structure in structures:
+        all_elements.extend(structure.elements)
 
-        for element in structure.elements:
-            elem_count += 1
-            logger.info(f"  [{elem_count}/{total_elements}] {element.element_id} ({element.element_type.value})")
+    logger.info(f"  Total elements to analyze: {len(all_elements)}")
 
-            analysis = element_analyzer.analyze(element, page_image, structure.elements)
-            analyses[element.element_id] = analysis
+    # Batch analyze all elements simultaneously
+    if all_elements:
+        analyses_list = element_analyzer.analyze_batch(
+            elements=all_elements,
+            page_images=page_images,
+            page_structures=structures,
+        )
+
+        # Convert to dict for compatibility
+        analyses = {analysis.element_id: analysis for analysis in analyses_list}
+    else:
+        analyses = {}
 
     logger.info(f"✅ Pass 2 complete: {len(analyses)} elements analyzed")
 
