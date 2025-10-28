@@ -121,26 +121,41 @@ class DeepSeekEngine:
 
         # Save PIL Image to temporary file (official API expects file path, not PIL Image)
         temp_fd, temp_path = tempfile.mkstemp(suffix='.png')
+        temp_output_dir = tempfile.mkdtemp()  # Create temporary output directory
+
         try:
             os.close(temp_fd)  # Close file descriptor
             image.save(temp_path)  # Save PIL Image to file
 
-            # Use official API with file path
+            # Use official HuggingFace Transformers API
+            # CRITICAL: output_path is REQUIRED by modeling_deepseekocr.py:706-707
+            # The official infer() method calls:
+            #   - os.makedirs(output_path, exist_ok=True)
+            #   - os.makedirs(f'{output_path}/images', exist_ok=True)
+            # If output_path is empty string '', it causes:
+            #   [Errno 2] No such file or directory: ''
             response = self.model.infer(
                 tokenizer=self.tokenizer,
                 prompt=prompt,  # ✅ Use original prompt (no manual formatting!)
                 image_file=temp_path,  # ✅ Pass file path (string), not PIL Image
+                output_path=temp_output_dir,  # ✅ REQUIRED: temporary directory for internal processing
                 base_size=self.config.base_size,
                 image_size=self.config.image_size,
                 crop_mode=self.config.crop_mode,
+                save_results=False,  # ✅ Don't save intermediate visualization results
+                test_compress=False,  # ✅ No compression testing needed
             )
 
             return response
 
         finally:
-            # Clean up temporary file
+            # Clean up temporary files and directory
             if os.path.exists(temp_path):
                 os.remove(temp_path)
+
+            if os.path.exists(temp_output_dir):
+                import shutil
+                shutil.rmtree(temp_output_dir, ignore_errors=True)
 
             # Clear CUDA cache to free memory
             if self._device == "cuda":
