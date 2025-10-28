@@ -10,8 +10,6 @@ Critical features:
 
 import json
 import torch
-import tempfile
-import os
 from PIL import Image
 from typing import Dict, Any, Optional
 from transformers import AutoModel, AutoTokenizer
@@ -96,40 +94,27 @@ class DeepSeekEngine:
         prompt: str,
     ) -> str:
         """
-        Generic inference using official DeepSeek-OCR API.
+        Generic inference method.
 
         Args:
             image: PIL Image
-            prompt: Prompt string from prompts.py (already correctly formatted)
-                    e.g., "<image>\n<|grounding|>Analyze this document..."
+            prompt: Prompt string with <image> placeholder
 
         Returns:
             Model response string
-
-        Note:
-            The official infer() method expects image_file as a STRING path, not PIL Image.
-            We save the PIL Image to a temporary file and pass the path.
-
-            The official infer() method handles all preprocessing internally:
-            1. Creates conversation format with role/content/images
-            2. Calls format_messages() to convert to DeepSeek format
-            3. Calls load_pil_images() to load images from file paths
-            4. Calls dynamic_preprocess() for image preprocessing
-            5. Performs model inference
         """
         self._load_model()
 
-        # Save PIL Image to temporary file (official API expects file path, not PIL Image)
-        temp_fd, temp_path = tempfile.mkstemp(suffix='.png')
-        try:
-            os.close(temp_fd)  # Close file descriptor
-            image.save(temp_path)  # Save PIL Image to file
+        # Format prompt (manual formatting, no chat template)
+        formatted_prompt = f"<｜User｜>: {prompt}\n\n<｜Assistant｜>:"
 
-            # Use official API with file path
+        try:
+            # Use model's infer method with official API
+            # Official signature: infer(tokenizer, prompt, image_file, output_path, base_size, image_size, crop_mode, test_compress, save_results, eval_mode)
             response = self.model.infer(
                 tokenizer=self.tokenizer,
-                prompt=prompt,  # ✅ Use original prompt (no manual formatting!)
-                image_file=temp_path,  # ✅ Pass file path (string), not PIL Image
+                prompt=formatted_prompt,
+                image_file=image,
                 base_size=self.config.base_size,
                 image_size=self.config.image_size,
                 crop_mode=self.config.crop_mode,
@@ -138,10 +123,6 @@ class DeepSeekEngine:
             return response
 
         finally:
-            # Clean up temporary file
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
-
             # Clear CUDA cache to free memory
             if self._device == "cuda":
                 torch.cuda.empty_cache()
